@@ -3,8 +3,11 @@ import { Canvas, useThree } from '@react-three/fiber';
 import { Environment, OrbitControls } from '@react-three/drei';
 import Model from './components/Model';
 import ErrorBoundary from './components/ErrorBoundary';
+import Loader from './components/Loader';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -30,19 +33,18 @@ export default function App() {
   useEffect(() => {
     const sections = document.querySelectorAll('.feature-section');
     const rotations = [
-      [0, 0, 0],                         // Intro
-      [0, Math.PI / 5, 0],             // Design
-      [.1, Math.PI / 2, .2],               // Sound
-      [0, Math.PI * 1, 0],        // Connectivity
-      [0, Math.PI, 0],                   // Final
+      [0, 0, 0],
+      [0, Math.PI / 5, 0],
+      [0.1, Math.PI / 2, 0.2],
+      [0, Math.PI * 1, 0],
+      [0, Math.PI, 0],
     ];
-
     const cameraPositions = [
-      [6, 6, 40],  // Intro
-      [2, 2, 15],  // Design
-      [20, 10, 45],  // Sound
-      [0, 2, 15],  // Connectivity
-      [2, 0, 45],  // Final
+      [6, 6, 40],
+      [2, 2, 15],
+      [20, 10, 45],
+      [0, 2, 15],
+      [2, 0, 45],
     ];
 
     const cleanup = [];
@@ -144,6 +146,15 @@ export default function App() {
     return () => cleanup.forEach(dispose => dispose());
   }, []);
 
+  const featureDescriptions = [
+  "Experience the iconic OP-1 from every angle with cinematic lighting and interactive controls.",
+  "Customize the design: change materials, textures, and lighting to suit your aesthetic.",
+  "Explore its powerful sound engine and effects modules crafted for musicians and creators.",
+  "See how the OP-1 connects with your studio or live rig, showcasing versatile I/O and integration.",
+  "Thank for exploring! Stay creative with your custom OP-1.",
+];
+
+
   return (
     <div className="min-h-[600vh] w-screen bg-black text-white relative overflow-x-hidden">
       {/* Canvas */}
@@ -151,18 +162,19 @@ export default function App() {
         <ErrorBoundary>
           <Canvas shadows>
             <ResponsiveCamera />
-            <fog attach="fog" args={['#000000', 5, 85]} />
             <ambientLight intensity={0.6} />
             <directionalLight position={[10, 20, 10]} intensity={2} />
 
-            <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+            <mesh rotation={[-Math.PI / 2, 2, 0]} receiveShadow>
               <planeGeometry args={[100, 100]} />
-              <shadowMaterial opacity={0.25} />
+              <shadowMaterial opacity={0} />
             </mesh>
 
-            <Suspense fallback={null}>
+            <Suspense fallback={<Loader />}>
+
+              <Environment files="/studio_small_08_2k.hdr" background />
+              
               <Model ref={modelRef} />
-              <Environment files="/canada_montreal_loft_max_sunny.exr" />
             </Suspense>
 
             <OrbitControls
@@ -173,26 +185,27 @@ export default function App() {
               maxPolarAngle={Math.PI / 3.5}
             />
           </Canvas>
+
         </ErrorBoundary>
       </div>
 
       {/* UI Button */}
       <div className="fixed top-5 left-5 z-10 bg-black/60 text-white p-4 rounded-xl space-y-2">
-        <h1 className="text-2xl font-bold">OP-1</h1>
-        <p className="text-sm">Explore materials and lighting effects.</p>
+        <h1 className="text-4xl font-bold">OP-1</h1>
+        <p className="text-m">Explore materials and lighting in React Three Fiber.</p>
       </div>
 
       {/* Scroll Sections */}
       <div className="relative z-10">
-        {['Intro', 'Design', 'Sound', 'Connectivity', 'Final', 'OP-1'].map((label, i) => (
+        {['Intro', 'Design', 'Sound', 'Connectivity', 'OP-1'].map((label, i) => (
           <section
             key={i}
-            className="feature-section h-screen flex flex-col items-center justify-center px-10 text-center"
+            className="text-gray-900  feature-section relative h-screen flex flex-col items-center justify-center px-10 text-center"
           >
-            <div className="feature-overlay opacity-0 translate-y-12 transition-all duration-700">
-              <h2 className="text-4xl font-bold mb-4">{label} Feature</h2>
-              <p className="text-lg text-gray-300 max-w-xl">
-                Detail about {label.toLowerCase()} goes here.
+            <div className="feature-overlay opacity-0 translate-y-12 transition-all duration-700 z-10">
+                <h2 className="text-4xl font-bold mb-4">{label}</h2>
+                <p className="text-xl text-gray-800 max-w-xl">
+                  {featureDescriptions[i]}
               </p>
             </div>
           </section>
