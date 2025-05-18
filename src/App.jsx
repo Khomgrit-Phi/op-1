@@ -13,7 +13,7 @@ function ResponsiveCamera() {
 
   useEffect(() => {
     if (camera) {
-      camera.fov = size.width < 768 ? 50 : 35;
+      camera.fov = size.width < 768 ? 80 : 55;
       camera.position.set(6, 6, 40);
       camera.lookAt(0, 0, 0);
       camera.updateProjectionMatrix();
@@ -29,9 +29,16 @@ export default function App() {
 
   useEffect(() => {
     const sections = document.querySelectorAll('.feature-section');
-    const angles = [0, Math.PI / 4, Math.PI / 2, Math.PI * 0.75, Math.PI];
+    const rotations = [
+  [0, 0, 0],                      // Intro
+  [0.5, Math.PI / 5, 0],          // Design
+  [0, Math.PI / 2, -.5],          // Sound
+  [0.1, Math.PI * 0.75, 0.1],     // Connectivity
+  [0, Math.PI, 0],                // Final
+];
 
-    let triggers = [];
+
+    const cleanup = [];
 
     const setupScroll = () => {
       if (!modelRef.current) {
@@ -39,47 +46,94 @@ export default function App() {
         return;
       }
 
-      triggers = Array.from(sections).map((section, i) =>
-        ScrollTrigger.create({
+      const model = modelRef.current;
+
+      sections.forEach((section, i) => {
+        const overlay = section.querySelector('.feature-overlay');
+
+        const trigger = ScrollTrigger.create({
           trigger: section,
           start: 'top center',
           end: 'bottom center',
-          scrub: true,
+          scrub: 1,
           onEnter: () => {
-            gsap.to(modelRef.current.rotation, {
-              y: angles[i],
-              duration: 1,
-              ease: 'power2.inOut',
+            gsap.to(model.rotation, {
+              x: rotations[i][0],
+              y: rotations[i][1],
+              z: rotations[i][2],
+              duration: 1.5,
+              // ease: 'power2.inOut',
+              overwrite: 'auto',
             });
+
+            if (overlay) {
+              gsap.to(overlay, {
+                autoAlpha: 1,
+                y: 0,
+                duration: 1,
+                // ease: 'power3.out',
+              });
+            }
+          },
+          onLeave: () => {
+            if (overlay) {
+              gsap.to(overlay, {
+                autoAlpha: 0,
+                y: 50,
+                duration: 0.8,
+                // ease: 'power2.in',
+              });
+            }
           },
           onEnterBack: () => {
-            gsap.to(modelRef.current.rotation, {
-              y: angles[i],
-              duration: 1,
-              ease: 'power2.inOut',
+            gsap.to(model.rotation, {
+              x: rotations[i][0],
+              y: rotations[i][1],
+              z: rotations[i][2],
+              duration: 1.5,
+              // ease: 'power2.inOut',
+              overwrite: 'auto',
             });
+
+            if (overlay) {
+              gsap.to(overlay, {
+                autoAlpha: 1,
+                y: 0,
+                duration: 1.5,
+                // ease: 'power3.out',
+              });
+            }
           },
-        })
-      );
+          onLeaveBack: () => {
+            if (overlay) {
+              gsap.to(overlay, {
+                autoAlpha: 0,
+                y: 50,
+                duration: 1.5,
+                // ease: 'power2.in',
+              });
+            }
+          },
+        });
+
+        cleanup.push(() => trigger.kill());
+      });
 
       ScrollTrigger.refresh();
     };
 
     setupScroll();
-
-    return () => {
-      triggers.forEach((t) => t.kill());
-    };
+    return () => cleanup.forEach((dispose) => dispose());
   }, []);
 
   return (
     <div className="min-h-[600vh] w-screen bg-black text-white relative overflow-x-hidden">
+      {/* Canvas */}
       <div className="fixed top-0 left-0 w-full h-screen z-0">
         <ErrorBoundary>
           <Canvas shadows>
             <ResponsiveCamera />
             <fog attach="fog" args={['#000000', 5, 85]} />
-
             <ambientLight intensity={0.6} />
             <directionalLight position={[10, 20, 10]} intensity={1.5} />
 
@@ -104,7 +158,8 @@ export default function App() {
         </ErrorBoundary>
       </div>
 
-      <div className="absolute top-5 left-5 z-10 bg-black/60 text-white p-4 rounded-xl space-y-2">
+      {/* UI Button */}
+      <div className="fixed top-5 left-5 z-10 bg-black/60 text-white p-4 rounded-xl space-y-2">
         <h1 className="text-2xl font-bold">Custom OP-1</h1>
         <p className="text-sm">Explore materials and lighting effects.</p>
         <button
@@ -115,17 +170,19 @@ export default function App() {
         </button>
       </div>
 
-      {/* Scroll Feature Sections */}
+      {/* Scroll Sections */}
       <div className="relative z-10">
         {['Intro', 'Design', 'Sound', 'Connectivity', 'Final'].map((label, i) => (
           <section
             key={i}
             className="feature-section h-screen flex flex-col items-center justify-center px-10 text-center"
           >
-            <h2 className="text-4xl font-bold mb-4">{label} Feature</h2>
-            <p className="text-lg text-gray-300 max-w-xl">
-              Detail about {label.toLowerCase()} goes here.
-            </p>
+            <div className="feature-overlay opacity-0 translate-y-12 transition-all duration-700">
+              <h2 className="text-4xl font-bold mb-4">{label} Feature</h2>
+              <p className="text-lg text-gray-300 max-w-xl">
+                Detail about {label.toLowerCase()} goes here.
+              </p>
+            </div>
           </section>
         ))}
       </div>

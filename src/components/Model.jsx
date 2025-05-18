@@ -57,7 +57,7 @@ const Model = forwardRef((props, ref) => {
     group.current = node;
     if (ref) ref.current = node; // 🔥 for App.jsx ScrollTrigger
   }}
-  position={[0, -1.2, 0]}
+  position={[0, 0, 0]}
 >
   <primitive object={scene} scale={[1.5, 1.5, 1.5]} />
 </group>
