@@ -14,14 +14,17 @@ function ResponsiveCamera({ cameraRef }) {
   useEffect(() => {
     if (camera) {
       const aspect = size.width / size.height;
-      camera.fov = size.width < 768 ? 75 : 60;
-      camera.position.set(0, 2, size.width < 768 ? 16 : 14);
+
+      // Wider field of view and further back
+      camera.fov = size.width < 768 ? 85 : 70;
+      camera.position.set(0, 2, size.width < 768 ? 50 : 40);
       camera.updateProjectionMatrix();
     }
   }, [camera, size]);
 
   return null;
 }
+
 
 export default function App() {
   const modelRef = useRef();
@@ -34,25 +37,33 @@ export default function App() {
   };
 
   useEffect(() => {
-    if (!modelRef.current) return;
+  if (!modelRef.current) return;
 
-    let startRotation = modelRef.current.rotation.y;
+  const model = modelRef.current;
+  let initialRotationY = model.rotation.y;
 
-    const ctx = gsap.context(() => {
-      ScrollTrigger.create({
-        trigger: document.body,
-        start: 'top top',
-        end: 'bottom bottom',
-        scrub: true,
-        onUpdate: (self) => {
-          const progress = self.progress;
-          modelRef.current.rotation.y = startRotation + progress * Math.PI * 2;
-        },
-      });
+  const ctx = gsap.context(() => {
+    ScrollTrigger.create({
+      trigger: document.body,
+      start: 'top top',
+      end: 'bottom bottom',
+      scrub: true,
+      onUpdate: (self) => {
+        const progress = self.progress;
+        model.rotation.y = initialRotationY + progress * Math.PI * 2;
+      },
+      onRefresh: (self) => {
+        // Resync the model’s rotation to avoid jump
+        model.rotation.y = initialRotationY + self.progress * Math.PI * 2;
+      },
     });
+  });
 
-    return () => ctx.revert();
-  }, []);
+  ScrollTrigger.refresh(); // Ensure latest layout state
+
+  return () => ctx.revert();
+}, []);
+
 
   useEffect(() => {
     const canvas = document.querySelector('canvas');
@@ -68,7 +79,7 @@ export default function App() {
         <ErrorBoundary>
           <Canvas shadows>
             <ResponsiveCamera />
-            <fog attach="fog" args={['#000000', 10, 35]} />
+            <fog attach="fog" args={['#000000', 5, 65]} />
 
             {/* Cinematic Lights */}
             <spotLight
