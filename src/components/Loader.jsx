@@ -1,4 +1,3 @@
-// components/Loader.jsx
 import { Html, useProgress } from '@react-three/drei';
 import { motion } from 'framer-motion';
 

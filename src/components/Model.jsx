@@ -1,4 +1,3 @@
-// components/Model.jsx
 import React, { forwardRef, useRef, useEffect, useState } from 'react';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
@@ -34,7 +33,7 @@ const Model = forwardRef((props, ref) => {
           child.material = createSpeakerMaterial();
         }
 
-        // Optional: boost env map intensity
+        //boost env map intensity
         if (child.material.envMapIntensity === undefined) {
           child.material.envMapIntensity = 1.0;
         }
@@ -46,7 +45,7 @@ const Model = forwardRef((props, ref) => {
     if (ref) ref.current = group.current;
   }, [scene, showEmissive, ref]);
 
-  // Optional: toggle emissive knobs
+  //toggle emissive knobs
   useEffect(() => {
     window.toggleEmissive = () => setShowEmissive((prev) => !prev);
   }, []);

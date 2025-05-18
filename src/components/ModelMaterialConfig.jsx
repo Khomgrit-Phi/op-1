@@ -62,7 +62,7 @@ export const createSpeakerMaterial = () =>
   });
 
 
-// TEXT ANIMATION (optional helper)
+// TEXT ANIMATION
 export const animateFeatureText = (selector) => {
   const elements = document.querySelectorAll(selector);
 
