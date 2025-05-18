@@ -1,4 +1,4 @@
-import React, { Suspense, useRef, useEffect, useState } from 'react';
+import React, { Suspense, useRef, useEffect } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { Environment, OrbitControls } from '@react-three/drei';
 import Model from './components/Model';
@@ -8,23 +8,21 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 gsap.registerPlugin(ScrollTrigger);
 
-function ResponsiveCamera({ cameraRef }) {
+function ResponsiveCamera() {
   const { camera, size } = useThree();
 
   useEffect(() => {
     if (camera) {
-      const aspect = size.width / size.height;
-
-      // Wider field of view and further back
-      camera.fov = size.width < 768 ? 85 : 70;
-      camera.position.set(0, 2, size.width < 768 ? 50 : 40);
+      camera.fov = size.width < 768 ? 50 : 35;
+      camera.position.set(6, 6, 40);
+      camera.lookAt(0, 0, 0);
       camera.updateProjectionMatrix();
     }
   }, [camera, size]);
+  
 
   return null;
 }
-
 
 export default function App() {
   const modelRef = useRef();
@@ -35,36 +33,51 @@ export default function App() {
       window.toggleEmissive?.();
     }
   };
-
+// Scroll Trigger
   useEffect(() => {
-  if (!modelRef.current) return;
+  let scrollTriggerInstance;
 
-  const model = modelRef.current;
-  let initialRotationY = model.rotation.y;
+  const trySetupScrollTrigger = () => {
+    const scrollGroup = modelRef.current; // outer group in <Model />
+    if (!scrollGroup) {
+      requestAnimationFrame(trySetupScrollTrigger);
+      return;
+    }
 
-  const ctx = gsap.context(() => {
-    ScrollTrigger.create({
+    scrollTriggerInstance = ScrollTrigger.create({
       trigger: document.body,
       start: 'top top',
       end: 'bottom bottom',
       scrub: true,
       onUpdate: (self) => {
-        const progress = self.progress;
-        model.rotation.y = initialRotationY + progress * Math.PI * 2;
+        scrollGroup.rotation.y = self.progress * Math.PI * 2;
       },
       onRefresh: (self) => {
-        // Resync the model’s rotation to avoid jump
-        model.rotation.y = initialRotationY + self.progress * Math.PI * 2;
+        scrollGroup.rotation.y = self.progress * Math.PI * 2;
       },
     });
-  });
 
-  ScrollTrigger.refresh(); // Ensure latest layout state
+    ScrollTrigger.refresh();
+  };
 
-  return () => ctx.revert();
+  setTimeout(trySetupScrollTrigger, 50); // Delay ensures layout + model is ready
+
+  return () => {
+    if (scrollTriggerInstance) scrollTriggerInstance.kill();
+  };
 }, []);
 
 
+
+
+  // Just to confirm it's linked properly
+  useEffect(() => {
+    if (modelRef.current) {
+      console.log("✅ modelRef is correctly linked:", modelRef.current);
+    }
+  }, []);
+
+  // Ensure canvas is interactive
   useEffect(() => {
     const canvas = document.querySelector('canvas');
     if (canvas) {
@@ -74,29 +87,27 @@ export default function App() {
 
   return (
     <div className="min-h-[300vh] w-screen bg-black text-white relative overflow-x-hidden">
-      {/* Fixed Canvas Layer */}
       <div className="fixed top-0 left-0 w-full h-screen z-0">
         <ErrorBoundary>
           <Canvas shadows>
             <ResponsiveCamera />
-            <fog attach="fog" args={['#000000', 5, 65]} />
+            <fog attach="fog" args={['#000000', 5, 85]} />
 
-            {/* Cinematic Lights */}
+            <ambientLight intensity={0.15} />
             <spotLight
-              position={[5, 5, 5]}
+              position={[10, 15, 10]}
               angle={0.3}
-              penumbra={1}
-              intensity={1.5}
+              penumbra={0.8}
+              intensity={2}
               castShadow
               shadow-mapSize-width={2048}
               shadow-mapSize-height={2048}
             />
-            <pointLight position={[-5, 2, 2]} intensity={0.4} color="#e0e0ff" />
-            <directionalLight position={[0, 5, -5]} intensity={1} color="#ffffff" />
+            <directionalLight position={[-10, 10, 5]} intensity={1} />
 
-            <mesh receiveShadow>
+            <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
               <planeGeometry args={[100, 100]} />
-              <shadowMaterial opacity={0.2} />
+              <shadowMaterial opacity={0.25} />
             </mesh>
 
             <Suspense fallback={null}>
@@ -104,12 +115,17 @@ export default function App() {
               <Environment files="/studio_small_08_2k.hdr" />
             </Suspense>
 
-            <OrbitControls ref={controlsRef} enableDamping enableZoom={false} />
+            <OrbitControls
+              ref={controlsRef}
+              enableDamping
+              enableZoom={false}
+              minPolarAngle={Math.PI / 3.5}
+              maxPolarAngle={Math.PI / 3.5}
+            />
           </Canvas>
         </ErrorBoundary>
       </div>
 
-      {/* UI Control */}
       <div className="absolute top-5 left-5 z-10 bg-black/60 text-white p-4 rounded-xl space-y-2">
         <h1 className="text-2xl font-bold">Custom OP-1</h1>
         <p className="text-sm">Explore materials and lighting effects.</p>
@@ -121,14 +137,21 @@ export default function App() {
         </button>
       </div>
 
-      {/* Scroll Section */}
-      <div className="mt-[120vh] px-10 text-center space-y-10">
-        <h2 className="text-4xl font-bold">Scroll Down to Explore</h2>
-        <p className="text-lg text-gray-300">
-          Interact with the OP-1 3D model and see real-time updates.
-        </p>
-        <div className="h-[150vh]" />
-      </div>
+      {/* Scroll Sections */}
+<div className="relative z-10">
+  {['Intro', 'Design', 'Sound', 'Connectivity', 'Final'].map((label, i) => (
+    <section
+      key={i}
+      className="feature-section h-screen flex flex-col items-center justify-center px-10 text-center"
+    >
+      <h2 className="text-4xl font-bold mb-4">{label} Feature</h2>
+      <p className="text-lg text-gray-300 max-w-xl">
+        Detailed explanation about {label.toLowerCase()} feature goes here.
+      </p>
+    </section>
+  ))}
+</div>
+
     </div>
   );
 }
