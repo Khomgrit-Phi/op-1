@@ -46,7 +46,7 @@ export const createReflectiveScreenMaterial = () =>
 
 export const createKeyMaterial = () =>
   new THREE.MeshPhysicalMaterial({
-    color: '#5e5e5e',
+    color: '#e9e9e9',
     roughness: 0.7,
     metalness: 0.1,
     reflectivity: 0.1,
@@ -75,7 +75,7 @@ export const animateFeatureText = (selector) => {
         y: 0,
         duration: 1,
         delay: i * 0.2,
-        ease: 'power3.out',
+        // ease: 'power3.out',
       }
     );
   });

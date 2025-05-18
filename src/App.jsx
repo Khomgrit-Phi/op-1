@@ -30,23 +30,31 @@ export default function App() {
   useEffect(() => {
     const sections = document.querySelectorAll('.feature-section');
     const rotations = [
-  [0, 0, 0],                      // Intro
-  [0.5, Math.PI / 5, 0],          // Design
-  [0, Math.PI / 2, -.5],          // Sound
-  [0.1, Math.PI * 0.75, 0.1],     // Connectivity
-  [0, Math.PI, 0],                // Final
-];
+      [0, 0, 0],                         // Intro
+      [0, Math.PI / 5, 0],             // Design
+      [.1, Math.PI / 2, .2],               // Sound
+      [0, Math.PI * 1, 0],        // Connectivity
+      [0, Math.PI, 0],                   // Final
+    ];
 
+    const cameraPositions = [
+      [6, 6, 40],  // Intro
+      [2, 2, 15],  // Design
+      [20, 10, 45],  // Sound
+      [0, 2, 15],  // Connectivity
+      [2, 0, 45],  // Final
+    ];
 
     const cleanup = [];
 
     const setupScroll = () => {
-      if (!modelRef.current) {
+      if (!modelRef.current || !controlsRef.current) {
         requestAnimationFrame(setupScroll);
         return;
       }
 
       const model = modelRef.current;
+      const camera = controlsRef.current.object;
 
       sections.forEach((section, i) => {
         const overlay = section.querySelector('.feature-overlay');
@@ -62,8 +70,15 @@ export default function App() {
               y: rotations[i][1],
               z: rotations[i][2],
               duration: 1.5,
-              // ease: 'power2.inOut',
               overwrite: 'auto',
+            });
+
+            gsap.to(camera.position, {
+              x: cameraPositions[i][0],
+              y: cameraPositions[i][1],
+              z: cameraPositions[i][2],
+              duration: 1.5,
+              onUpdate: () => camera.lookAt(0, 0, 0),
             });
 
             if (overlay) {
@@ -71,7 +86,6 @@ export default function App() {
                 autoAlpha: 1,
                 y: 0,
                 duration: 1,
-                // ease: 'power3.out',
               });
             }
           },
@@ -81,7 +95,6 @@ export default function App() {
                 autoAlpha: 0,
                 y: 50,
                 duration: 0.8,
-                // ease: 'power2.in',
               });
             }
           },
@@ -91,16 +104,22 @@ export default function App() {
               y: rotations[i][1],
               z: rotations[i][2],
               duration: 1.5,
-              // ease: 'power2.inOut',
               overwrite: 'auto',
+            });
+
+            gsap.to(camera.position, {
+              x: cameraPositions[i][0],
+              y: cameraPositions[i][1],
+              z: cameraPositions[i][2],
+              duration: 1.5,
+              onUpdate: () => camera.lookAt(0, 0, 0),
             });
 
             if (overlay) {
               gsap.to(overlay, {
                 autoAlpha: 1,
                 y: 0,
-                duration: 1.5,
-                // ease: 'power3.out',
+                duration: 1,
               });
             }
           },
@@ -109,8 +128,7 @@ export default function App() {
               gsap.to(overlay, {
                 autoAlpha: 0,
                 y: 50,
-                duration: 1.5,
-                // ease: 'power2.in',
+                duration: 0.8,
               });
             }
           },
@@ -123,7 +141,7 @@ export default function App() {
     };
 
     setupScroll();
-    return () => cleanup.forEach((dispose) => dispose());
+    return () => cleanup.forEach(dispose => dispose());
   }, []);
 
   return (
@@ -135,7 +153,7 @@ export default function App() {
             <ResponsiveCamera />
             <fog attach="fog" args={['#000000', 5, 85]} />
             <ambientLight intensity={0.6} />
-            <directionalLight position={[10, 20, 10]} intensity={1.5} />
+            <directionalLight position={[10, 20, 10]} intensity={2} />
 
             <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
               <planeGeometry args={[100, 100]} />
@@ -160,19 +178,13 @@ export default function App() {
 
       {/* UI Button */}
       <div className="fixed top-5 left-5 z-10 bg-black/60 text-white p-4 rounded-xl space-y-2">
-        <h1 className="text-2xl font-bold">Custom OP-1</h1>
+        <h1 className="text-2xl font-bold">OP-1</h1>
         <p className="text-sm">Explore materials and lighting effects.</p>
-        <button
-          className="px-4 py-2 bg-white text-black rounded hover:bg-gray-200 transition"
-          onClick={() => window.toggleEmissive?.()}
-        >
-          Toggle Emissive
-        </button>
       </div>
 
       {/* Scroll Sections */}
       <div className="relative z-10">
-        {['Intro', 'Design', 'Sound', 'Connectivity', 'Final'].map((label, i) => (
+        {['Intro', 'Design', 'Sound', 'Connectivity', 'Final', 'OP-1'].map((label, i) => (
           <section
             key={i}
             className="feature-section h-screen flex flex-col items-center justify-center px-10 text-center"
