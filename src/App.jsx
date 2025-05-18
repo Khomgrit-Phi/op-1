@@ -19,7 +19,6 @@ function ResponsiveCamera() {
       camera.updateProjectionMatrix();
     }
   }, [camera, size]);
-  
 
   return null;
 }
@@ -28,82 +27,61 @@ export default function App() {
   const modelRef = useRef();
   const controlsRef = useRef();
 
-  const handleHighlight = () => {
-    if (modelRef.current) {
-      window.toggleEmissive?.();
-    }
-  };
-// Scroll Trigger
   useEffect(() => {
-  let scrollTriggerInstance;
+    const sections = document.querySelectorAll('.feature-section');
+    const angles = [0, Math.PI / 4, Math.PI / 2, Math.PI * 0.75, Math.PI];
 
-  const trySetupScrollTrigger = () => {
-    const scrollGroup = modelRef.current; // outer group in <Model />
-    if (!scrollGroup) {
-      requestAnimationFrame(trySetupScrollTrigger);
-      return;
-    }
+    let triggers = [];
 
-    scrollTriggerInstance = ScrollTrigger.create({
-      trigger: document.body,
-      start: 'top top',
-      end: 'bottom bottom',
-      scrub: true,
-      onUpdate: (self) => {
-        scrollGroup.rotation.y = self.progress * Math.PI * 2;
-      },
-      onRefresh: (self) => {
-        scrollGroup.rotation.y = self.progress * Math.PI * 2;
-      },
-    });
+    const setupScroll = () => {
+      if (!modelRef.current) {
+        requestAnimationFrame(setupScroll);
+        return;
+      }
 
-    ScrollTrigger.refresh();
-  };
+      triggers = Array.from(sections).map((section, i) =>
+        ScrollTrigger.create({
+          trigger: section,
+          start: 'top center',
+          end: 'bottom center',
+          scrub: true,
+          onEnter: () => {
+            gsap.to(modelRef.current.rotation, {
+              y: angles[i],
+              duration: 1,
+              ease: 'power2.inOut',
+            });
+          },
+          onEnterBack: () => {
+            gsap.to(modelRef.current.rotation, {
+              y: angles[i],
+              duration: 1,
+              ease: 'power2.inOut',
+            });
+          },
+        })
+      );
 
-  setTimeout(trySetupScrollTrigger, 50); // Delay ensures layout + model is ready
+      ScrollTrigger.refresh();
+    };
 
-  return () => {
-    if (scrollTriggerInstance) scrollTriggerInstance.kill();
-  };
-}, []);
+    setupScroll();
 
-
-
-
-  // Just to confirm it's linked properly
-  useEffect(() => {
-    if (modelRef.current) {
-      console.log("✅ modelRef is correctly linked:", modelRef.current);
-    }
-  }, []);
-
-  // Ensure canvas is interactive
-  useEffect(() => {
-    const canvas = document.querySelector('canvas');
-    if (canvas) {
-      canvas.style.pointerEvents = 'auto';
-    }
+    return () => {
+      triggers.forEach((t) => t.kill());
+    };
   }, []);
 
   return (
-    <div className="min-h-[300vh] w-screen bg-black text-white relative overflow-x-hidden">
+    <div className="min-h-[600vh] w-screen bg-black text-white relative overflow-x-hidden">
       <div className="fixed top-0 left-0 w-full h-screen z-0">
         <ErrorBoundary>
           <Canvas shadows>
             <ResponsiveCamera />
             <fog attach="fog" args={['#000000', 5, 85]} />
 
-            <ambientLight intensity={0.15} />
-            <spotLight
-              position={[10, 15, 10]}
-              angle={0.3}
-              penumbra={0.8}
-              intensity={2}
-              castShadow
-              shadow-mapSize-width={2048}
-              shadow-mapSize-height={2048}
-            />
-            <directionalLight position={[-10, 10, 5]} intensity={1} />
+            <ambientLight intensity={0.6} />
+            <directionalLight position={[10, 20, 10]} intensity={1.5} />
 
             <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
               <planeGeometry args={[100, 100]} />
@@ -112,7 +90,7 @@ export default function App() {
 
             <Suspense fallback={null}>
               <Model ref={modelRef} />
-              <Environment files="/studio_small_08_2k.hdr" />
+              <Environment files="/canada_montreal_loft_max_sunny.exr" />
             </Suspense>
 
             <OrbitControls
@@ -131,27 +109,26 @@ export default function App() {
         <p className="text-sm">Explore materials and lighting effects.</p>
         <button
           className="px-4 py-2 bg-white text-black rounded hover:bg-gray-200 transition"
-          onClick={handleHighlight}
+          onClick={() => window.toggleEmissive?.()}
         >
           Toggle Emissive
         </button>
       </div>
 
-      {/* Scroll Sections */}
-<div className="relative z-10">
-  {['Intro', 'Design', 'Sound', 'Connectivity', 'Final'].map((label, i) => (
-    <section
-      key={i}
-      className="feature-section h-screen flex flex-col items-center justify-center px-10 text-center"
-    >
-      <h2 className="text-4xl font-bold mb-4">{label} Feature</h2>
-      <p className="text-lg text-gray-300 max-w-xl">
-        Detailed explanation about {label.toLowerCase()} feature goes here.
-      </p>
-    </section>
-  ))}
-</div>
-
+      {/* Scroll Feature Sections */}
+      <div className="relative z-10">
+        {['Intro', 'Design', 'Sound', 'Connectivity', 'Final'].map((label, i) => (
+          <section
+            key={i}
+            className="feature-section h-screen flex flex-col items-center justify-center px-10 text-center"
+          >
+            <h2 className="text-4xl font-bold mb-4">{label} Feature</h2>
+            <p className="text-lg text-gray-300 max-w-xl">
+              Detail about {label.toLowerCase()} goes here.
+            </p>
+          </section>
+        ))}
+      </div>
     </div>
   );
 }
